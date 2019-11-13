@@ -6,9 +6,6 @@ class Problem():
         self.__restrictions = []
         self.__solutions = []
 
-    ax1,bx2,cx3...,mxn
-    self.__objective.sum
-
     def set_objective(self):
         for i in range(0, len(self.__variables)):
             self.__objective.append(self.__variables[i]*self.__constraints[i])
@@ -29,5 +26,3 @@ class Problem():
 
     def add_solution(self, solution):
         self.__solutions.append(solution)
-
-    

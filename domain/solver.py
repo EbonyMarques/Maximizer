@@ -69,17 +69,3 @@ class Solver():
             print("\nPivot column: %s\nPivot row: %s" %(c+1,r+2))
             self.display()
 
-if __name__ == "__main__":
-    """
-    max z = 2x + 3y + 2z
-    2x + y + z <= 4
-    x + 2y + z <= 7
-    z          <= 5
-    x, y, z    >= 0
-    """
-
-    t = Solver([-2, -3, -2])
-    t.add_constraint([2, 1, 1], 4)
-    t.add_constraint([1, 2, 1], 7)
-    t.add_constraint([0, 0, 1], 5)
-    t.solve()
