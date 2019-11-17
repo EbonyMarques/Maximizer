@@ -1,21 +1,29 @@
 from domain.problem import Problem
 from domain.solver import Solver
 
-problem = Problem()
+objective_raw = input(">>> Entre com as constantes da função objetivo: ")
+constants = objective_raw.split(",")
+objective = ""
+for i in range(0, len(constants)):
+    if i == len(constants)-1:
+        objective += constants[i] + "x%s" %(i)
+    else:
+        objective += constants[i] + "x%s + " %(i)
+print("<?> %s é a função objetivo? " %(objective))
 
 """
-max z = 2x + 3y + 2z
-2x + y + z <= 4
-x + 2y + z <= 7
-z          <= 5
-x, y, z    >= 0
+variables = int(input(">>> Entre com a quantidade de variáveis: "))
+constants = []
+
+for i in range(0, variables):
+    constants.append(int(input(">>> Entre com o lucro da %ia variável: " %(i+1))))
 """
-
-solver = Solver([-2, -3, -2])
-solver.add_constraint([2, 1, 1], 4)
-solver.add_constraint([1, 2, 1], 7)
-solver.add_constraint([0, 0, 1], 5)
-solver.solve()
-
-#optimal_solution = Solver()
-#problem.add_solution(optimal_solution)
+"""problem = Problem(3,6)
+problem.constrain('200,20,15,L,5000')
+problem.constrain('0.5,0.2,0.3,L,30')
+problem.constrain('1,1,1,L,150')
+problem.constrain('1,0,0,G,10')
+problem.constrain('0,1,0,G,10')
+problem.constrain('0,0,1,G,10')
+problem.obj('35,22,10')
+print(Solver().solve(problem))"""

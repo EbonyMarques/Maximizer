@@ -1,71 +1,146 @@
-from __future__ import division
-from solution import Solution
-from numpy import *
+#from solution import Solution
+import numpy as np
 
 class Solver():
-    def __init__(self, obj):
-        self.obj = [1] + obj
-        self.rows = []
-        self.cons = []
+    def next_round_r(self, table):    
+        m = min(table[:-1,-1])    
+        if m>= 0:        
+            return False    
+        else:        
+            return True
 
-    def add_constraint(self, expression, value):
-        self.rows.append([0] + expression)
-        self.cons.append(value)
+    def next_round(self, table):    
+        lr = len(table[:,0])   
+        m = min(table[lr-1,:-1])    
+        if m>=0:
+            return False
+        else:
+            return True
+        
+    def find_neg_r(self, table):
+        lc = len(table[0,:])
+        m = min(table[:-1,lc-1])
+        if m<=0:        
+            n = np.where(table[:-1,lc-1] == m)[0][0]
+        else:
+            n = None
+        return n
 
-    def _pivot_column(self):
-        low = 0
-        idx = 0
+    def find_neg(self, table):
+        lr = len(table[:,0])
+        m = min(table[lr-1,:-1])
+        if m<=0:
+            n = np.where(table[lr-1,:-1] == m)[0][0]
+        else:
+            n = None
+        return n
 
-        for i in range(1, len(self.obj)-1):
-            if self.obj[i] < low:
-                low = self.obj[i]
-                idx = i
+    def loc_piv_r(self, table):
+        total = []        
+        r = self.find_neg_r(table)
+        row = table[r,:-1]
+        m = min(row)
+        c = np.where(row == m)[0][0]
+        col = table[:-1,c]
+        for i, b in zip(col,table[:-1,-1]):
+            if i**2>0 and b/i>0:
+                total.append(b/i)
+            else:                
+                total.append(10000)
+        index = total.index(min(total))        
+        return [index,c]
 
-        if idx == 0: return -1
-        return idx
+    def loc_piv(self, table):
+        if self.next_round(table):
+            total = []
+            n = self.find_neg(table)
+            for i,b in zip(table[:-1,n],table[:-1,-1]):
+                if b/i >0 and i**2>0:
+                    total.append(b/i)
+                else:
+                    total.append(10000)
+            index = total.index(min(total))
+            return [index,n]
 
-    def _pivot_row(self, col):
-        rhs = [self.rows[i][-1] for i in range(len(self.rows))]
-        lhs = [self.rows[i][col] for i in range(len(self.rows))]
-        ratio = []
+    def pivot(self, row,col,table):
+        lr = len(table[:,0])
+        lc = len(table[0,:])
+        t = np.zeros((lr,lc))
+        pr = table[row,:]
+        if table[row,col]**2>0:
+            e = 1/table[row,col]
+            r = pr*e
+            for i in range(len(table[:,col])):
+                k = table[i,:]
+                c = table[i,col]
+                if list(k) == list(pr):
+                    continue
+                else:
+                    t[i,:] = list(k-r*c)
+            t[row,:] = list(r)
+            return t
+        else:
+            print('Cannot pivot on this element.')
 
-        for i in range(len(rhs)):
-            if lhs[i] == 0:
-                ratio.append(99999999 * abs(max(rhs)))
-                continue
-            ratio.append(rhs[i]/lhs[i])
-            return argmin(ratio)
+    def convert_min(self, table):
+        table[-1,:-2] = [-1*i for i in table[-1,:-2]]
+        table[-1,-1] = -1*table[-1,-1]    
+        return table
 
-    def display(self):
-        print("\n", matrix([self.obj] + self.rows))
+    def gen_var(self, table):
+        lc = len(table[0,:])
+        lr = len(table[:,0])
+        var = lc - lr -1
+        v = []
+        for i in range(var):
+            v.append('x'+str(i+1))
+        return v
 
-    def _pivot(self, row, col):
-        e = self.rows[row][col]
-        self.rows[row] /= e
+    def maxz(self, table):
+        while self.next_round_r(table)==True:
+            table = self.pivot(self.loc_piv_r(table)[0],self.loc_piv_r(table)[1],table)
+        while self.next_round(table)==True:
+            table = self.pivot(self.loc_piv(table)[0],self.loc_piv(table)[1],table)        
+        lc = len(table[0,:])
+        lr = len(table[:,0])
+        var = lc - lr -1
+        i = 0
+        val = {}
+        for i in range(var):
+            col = table[:,i]
+            s = sum(col)
+            m = max(col)
+            if float(s) == float(m):
+                loc = np.where(col == m)[0][0]            
+                val[self.gen_var(table)[i]] = table[loc,-1]
+            else:
+                val[self.gen_var(table)[i]] = 0
+        val['max'] = table[-1,-1]
+        return val
 
-        for i in range(len(self.rows)):
-            if i == row: continue
-            self.rows[i] = self.rows[i] - self.rows[i][col]*self.rows[row]
-        self.obj = self.obj - self.obj[col]*self.rows[row]
-    
-    def _check(self):
-        if min(self.obj[1:-1]) >= 0: return 1
-        return 0
+    def minz(self, table):
+        table = self.convert_min(table)
+        while self.next_round_r(table)==True:
+            table = self.pivot(self.loc_piv_r(table)[0],self.loc_piv_r(table)[1],table)    
+        while self.next_round(table)==True:
+            table = self.pivot(self.loc_piv(table)[0],self.loc_piv(table)[1],table)       
+        lc = len(table[0,:])
+        lr = len(table[:,0])
+        var = lc - lr -1
+        i = 0
+        val = {}
+        for i in range(var):
+            col = table[:,i]
+            s = sum(col)
+            m = max(col)
+            if float(s) == float(m):
+                loc = np.where(col == m)[0][0]             
+                val[self.gen_var(table)[i]] = table[loc,-1]
+            else:
+                val[self.gen_var(table)[i]] = 0 
+                val['min'] = table[-1,-1]*-1
+        return val
 
-    def solve(self):
-        for i in range(len(self.rows)):
-            self.obj += [0]
-            ident = [0 for r in range(len(self.rows))]
-            ident[i] = 1
-            self.rows[i] += ident + [self.cons[i]]
-            self.rows[i] = array(self.rows[i], dtype=float)
-        self.obj = array(self.obj + [0], dtype=float)
-
-        self.display()
-        while not self._check():
-            c = self._pivot_column()
-            r = self._pivot_row(c)
-            self._pivot(r,c)
-            print("\nPivot column: %s\nPivot row: %s" %(c+1,r+2))
-            self.display()
-
+    def solve(self, problem):
+        result = self.maxz(problem.table)
+        return result
