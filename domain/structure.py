@@ -5,7 +5,7 @@ def set_objective(message):
     objective = ""
 
     for i in range(0, len(constants)):
-        constants[i] = int(constants[i].strip())
+        constants[i] = float(constants[i].strip())
 
     products = []
 
@@ -81,49 +81,22 @@ def set_constraint(constraint_obj, a):
 
     constants_raw = input(constraint_obj.message1)
     constants = constants_raw.strip().split(",")
-    constraint = ""
 
     print(constants)
 
     for i in range(0, len(constants)):
         constants[i] = float(constants[i].strip())
 
-    if len(constants) != len(a):
+    if len(constants) != len(a)+1:
         return 0
 
-    for i in range(0, len(constants)):
-        constraint += str(constants[i]) + ","
+    return constants
 
-    #constraint = constraint[:-1]
-    constraint += "L,"
-
-    while True:
-        try:
-            b = float(input(constraint_obj.message3))
-            constraint += str(b)
-        except:
-            print(constraint_obj.error3)
-            continue
-        break
-
-    #constraint_obj.constraint = constraint
-    return constraint
-
-def set_constraint_2(constraint_obj, a, product, condc):
+def set_constraint_2(constraint_obj, a, product):
     try:
         constant = float(input(constraint_obj.message1 + product +": "))
-        b = [0]*len(a)
-        c = product[1:]
-        b[int(c)-1] = 1
 
-        constraint = ""
-        for i in b:
-            constraint += str(i) + ","
-        #constraint = constraint[:-1]
-        constraint += "%s," %(condc) + str(constant) 
-        
-        #constraint_obj.constraint = constraint
-        return constraint
+        return constant
     except Exception as e:
         print(e)
         #print(constraint_obj.error1)
