@@ -1,46 +1,54 @@
 import cvxpy as cp
 from domain.problem import Problem
-from domain.solver import Solver
-from domain.constraint import Constraint
-from domain.structure import set_objective, set_constraint, set_constraint_2
+from domain.structure import *
 
 results = []
 constraints = []
-messages = ["<!> É hora de setar a função objetivo!", "<!> Ótimo. Comecemos a setar as restrições!", "<?> Você deseja inserir restrições de quantidades mínimas para os produtos?\n<?> Caso queira, entre com os produtos que terão as restrições. Por exemplo: x1,x4,x10...\nCaso não queira, tecle enter: ", "<?> Você deseja inserir restrições de quantidades máximas para os produtos?\n<?> Caso queira, entre com os produtos que terão as restrições. Por exemplo: x1,x4,x10...\nCaso não queira, tecle enter: "]
+names = ["Investimento", "Espaço", "Quantidade mínima de produto", "Quantidade máxima de produto"]
+messages = ["<!> Vamos começar setando a função objetivo do problema!",
+            ">>> Para cada produto considerado, entre com seu custo: ",
+            "<!> Ótimo. Agora, setemos as restrições!",
+            ">>> Para cada produto considerado, entre com sua área: ",
+            "<!> Caso queira adicionar restrições de quantidades mínimas, entre com aqueles\n<!>produtos que terão. Por exemplo: x1,x4,x10...\n<!> Caso não queira, apenas tecle enter para continuar. ", 
+            "<!> Caso queira adicionar restrições de quantidades máximas, entre com aqueles\n<!>produtos que terão. Por exemplo: x1,x4,x10...\n<!> Caso não queira, apenas tecle enter para continuar. ",
+            ">>> Entre com a quantidade mínima do produto ",
+            ">>> Entre com a quantidade máxima do produto ",
+            ">>> "]
 errors = ["<!> Este produto não existe: "]
 
 while True:
-    result = set_objective(messages[0])
+    print(messages[0]+"\n")
+    result = input_objective(messages[1])
     if result == 0:
-        messages[0] = "\n<!> Vamos tentar de novo!"
+        messages[0] = "<!> Vamos tentar de novo!"
         continue
-    else:
+    constants = result
+    while True:
+        result = confirm_objective(constants)
+        if result == 0:
+            continue
         variables = list()
         constants = list()
         for i in result[0]:
-            c = cp.Parameter()
-            c.value = i
+            constant = cp.Parameter()
+            constant.value = i
             variables.append(cp.Variable())
-            constants.append(c)
+            constants.append(constant)
         results.append(constants)
         results.append(variables)
-        results.append(result[2])
-
+        results.append(result[1])
         break
+    break
 
-# print(results)
-print()
+print("\n",results)
+print(messages[2])
 
-constraint1 = Constraint("Investimento", [">>> Considerando a ordem dos produtos setados, entre com os custos individuais de cada um: ", "", ">>> Qual é o valor total disponível para investimento? "], ["<!> A quantidade de custos difere da quantidade de produtos anteriormente setados.", "", "<!> Esse valor deve ser inteiro ou decimal!"])
-print(messages[1])
 while True:
-    result = set_constraint(constraint1, results[0])
+    result = set_constraint(names[0], messages[1], results[0])
     print(result)
     if result == 0:
-        print("\n"+constraint1.error1)
-        messages[1] = "<!> Vamos tentar setar a restrição de %s de novo." %constraint1.name
+        messages[1] = "<!> Vamos tentar setar a restrição de %s de novo." %names[0]
         continue
-    
     for i in range(len(result)):
         if i == 0:
             constraint = result[i]*results[1][i]
@@ -48,20 +56,16 @@ while True:
             constraint = (constraint <= result[i])
         else:
             constraint += result[i]*results[1][i]
-
     constraints.append(constraint)
     break
 
 # print(results)
 
-constraint2 = Constraint("Espaço", [">>> Considerando a ordem dos produtos setados, entre com a área ocupada por cada um: ", "", ">>> Qual é a área total disponível no estoque? "], ["<!> A quantidade de custos difere da quantidade de produtos anteriormente setados.", "", "<!> Esse valor deve ser inteiro ou decimal!"])
 while True:
-    result = set_constraint(constraint2, results[0])
+    result = set_constraint(names[1], messages[3], results[0])
     if result == 0:
-        print("\n"+constraint2.error1)
-        messages[1] = "<!> Vamos tentar setar a restrição de %s de novo." %constraint1.name
+        messages[1] = "<!> Vamos tentar setar a restrição de %s de novo." %names[1]
         continue
-
     for i in range(len(result)):
         if i == 0:
             constraint = result[i]*results[1][i]
@@ -69,15 +73,16 @@ while True:
             constraint = (constraint <= result[i])
         else:
             constraint += result[i]*results[1][i]
-
     constraints.append(constraint)
     break
 
 #print(results)
 
-constraint3 = Constraint("Quantidade mínima", [">>> Entre com a quantidade mínima do produto ", "", ""], ["<!> Esse valor deve ser inteiro ou decimal!", "", ""])
+for i in range(len(results[0])):
+    constraints.append(results[1][i] >= 0)
+
 while True:
-    a = input("\n"+messages[2])
+    a = input("\n"+messages[4])
     c = True
     if len(a) != 0:
         b = a.split(",")
@@ -88,7 +93,7 @@ while True:
                 print("\n"+errors[0] + i + "!")
                 c = False
                 break
-            result = set_constraint_2(constraint3, results[2], i)
+            result = set_constraint_2(messages[6], results[2], i)
             constraints.append(results[1][results[2].index(i)] >= result)
         if not c:
             continue
@@ -97,9 +102,8 @@ while True:
 # #print(results)
 # #print(constraints)
 
-constraint4 = Constraint("Quantidade máxima", [">>> Entre com a quantidade máxima do produto ", "", ""], ["<!> Esse valor deve ser inteiro ou decimal!", "", ""])
 while True:
-    a = input("\n"+messages[3])
+    a = input("\n"+messages[5])
     c = True
     if len(a) != 0:
         b = a.split(",")
@@ -110,7 +114,7 @@ while True:
                 print("\n"+errors[0] + i + "!")
                 c = False
                 break
-            result = set_constraint_2(constraint4, results[2], i)
+            result = set_constraint_2(messages[7], results[2], i)
             constraints.append(results[1][results[2].index(i)] <= result)
         if not c:
             continue
@@ -124,5 +128,7 @@ for i in range(len(results[0])):
 
 problema = cp.Problem(cp.Maximize(objetivo), constraints)
 problema.solve()
+
+print("\n<!> Há", len(constraints), "restrições.\n")
 
 print(problema.value, list(map((lambda x: x.value),results[1])), problema.status)
