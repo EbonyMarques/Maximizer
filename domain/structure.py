@@ -1,14 +1,3 @@
-def input_handler(text):
-    if len(text) == 0:
-        return 0
-    try:
-        result = text.split(",")
-        for i in range(0, len(result)):
-            result[i] = float(result[i].strip())
-    except:
-        result = 0
-    return result
-
 def decision_maker():
     confirm = input(">>> ")
     if confirm.lower() == "s":
@@ -18,14 +7,26 @@ def decision_maker():
     else:
         return 0
 
-def input_objective(message):
+def input_costs(message):
     raw = input(message)
-    return input_handler(raw)
+    try:
+        result = raw.split(",")
+        for i in range(0, len(result)):
+            result[i] = float(result[i].strip())
+        return result
+    except:
+        return 0
+
+def input_constraints(message, product):
+    try:
+        return float(input(message + product +": "))
+    except:
+        return False
 
 def confirm_objective(constants):
     objective = ""
     products = []
-    print("\n<?> Considerando que você setou %i produtos"%(len(constants)), end="")
+    print("\n<?> Considerando que você definiu %i produto(s)"%(len(constants)), end="")
     for i in range(1, len(constants)+1):
         if i == len(constants):
             print(" e x%i, "%(i))
@@ -50,71 +51,61 @@ def confirm_objective(constants):
         elif result == 1:
             return 0
         elif result == 2:
-            return (constants, products)
+            return (constants, products, objective)
 
-def set_objective():
-    objective = ""
-    products = []
-"""
-def set_constraint(constraint_obj, a):
-    print("\n<!> Vamos à restrição de %s."%constraint_obj.name)
-
-    raw_constants = input(constraint_obj.message1)
-    constants = raw_constants.strip().split(",")
+def confirm_constraint(constants, name, mark):
     constraint = ""
-
-    for i in range(0, len(constants)):
-        constants[i] = float(constants[i].strip())
-
-    if len(constants) != len(a):
-        return 0
-
-    for i in range(0, len(constants)):
-        constraint += str(constants[i]) + ","
-
-    constraint = constraint[:-1]
-
-    while True:
-        b = input(constraint_obj.message2)
-        if b.lower() == "menor":
-            constraint += "L"
-        elif b.lower() == "maior":
-            constraint += "G"
+    print("\n<?> Essas são as restrições para o(s) %i produto(s)"%(len(constants)), end="")
+    for i in range(1, len(constants)+1):
+        if i == len(constants):
+            print(" e x%i, "%(i))
         else:
-            print(constraint_obj.error2)
-            continue
-        break
+            print(", x%i"%(i), end="")
+
+    for i in range(1, len(constants)):
+        if i == len(constants)-1:
+            constraint += str(constants[i-1]) + "x%i %s " %(i, mark) + str(constants[i])
+        else:
+            constraint += str(constants[i-1]) + "x%i + " %(i)
+
+    print("<?> %s representa a restrição de %s? s/n?" %(constraint, name))
 
     while True:
-        try:
-            b = float(input(constraint_obj.message3))
-            constraint += str(b)
-        except:
-            print(constraint_obj.error3)
+        result = decision_maker()
+        if result == 0:
+            print("<!> Você deve entrar com s (sim) ou n (não)!")
             continue
+        elif result == 1:
+            return 0
+        elif result == 2:
+            return constraint
+
+def confirm_value_constraint(constant, value, mark):
+    print("\n<?> Essa é a restrição para o produto %s"%(constant))
+
+    constraint = "%s %s " %(constant, mark) + str(value)
+
+    print("<?> %s , confirma? s/n?" %(constraint))
+
+    while True:
+        result = decision_maker()
+        if result == 0:
+            print("<!> Você deve entrar com s (sim) ou n (não)!")
+            continue
+        elif result == 1:
+            return 0
+        elif result == 2:
+            return constraint
+
+def confirm_skip():
+    print("<?> Tem certeza disso? s/n?")
+    while True:
+        result = decision_maker()
+        if result == 0:
+            print("<!> Você deve entrar com s (sim) ou n (não)!")
+            continue
+        elif result == 1:
+            return True
+        elif result == 2:
+            return False
         break
-
-    return constraint
-"""
-def set_constraint(name, message, a):
-    print("\n<!> Vamos à restrição de %s."%name)
-
-    raw_constants = input(message)
-    constants = raw_constants.strip().split(",")
-
-    #print(constants)
-
-    for i in range(0, len(constants)):
-        constants[i] = float(constants[i].strip())
-
-    if len(constants) != len(a)+1:
-        return 0
-
-    return constants
-
-def set_constraint_2(message, a, product):
-    try:
-        constant = float(input(message + product +": "))
-        return constant
-    except Exception as e:
-        print(e)
