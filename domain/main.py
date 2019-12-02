@@ -3,15 +3,15 @@ from .structure import *
 
 def objective_costs(messages):
     while True:
-        result = input_costs(messages[1])
+        result = input_costs(messages[8])
         if result == 0:
-            print("<!> Vamos tentar de novo!")
+            print("<!> Vamos tentar de novo!\n")
             continue
         break
     return result
 
 def objective(messages, results):
-    print(messages[0])
+    print(messages[0],"\n")
     constants = objective_costs(messages)
     while True:
         result = confirm_objective(constants)
@@ -23,7 +23,7 @@ def objective(messages, results):
             constant = cp.Parameter()
             constant.value = i
             constants.append(constant)
-            variables.append(cp.Variable())
+            variables.append(cp.Variable(integer=True))
         results.extend([constants, variables, result[1]])
         break
     return result[2]
@@ -32,18 +32,18 @@ def constraint_costs(message, defined_constants):
     while True:
         result = input_costs(message)
         if ((not result) or len(result) != len(defined_constants)+1):
-            print("<!> Vamos tentar de novo!")
+            print("<!> Vamos tentar de novo!\n")
             continue
         break
     return result
 
 def basic_constraint(message, name, results, constraints, mark):
-    print("\n<!> Vamos à restrição de %s."%name)
+    print("<!> Vamos à restrição de %s.\n"%name)
     constants = constraint_costs(message, results[0])
     while True:
         result = confirm_constraint(constants, name, mark)
         if result == 0:
-            constants = constraint_costs("<!> Vamos tentar definir a restrição de %s de novo: " %name, results[0])
+            constants = constraint_costs("<!> Vamos tentar definir a restrição de %s de novo! " %name, results[0])
             continue
         for i in range(len(constants)):
             if i == 0:
@@ -65,24 +65,26 @@ def constraint_value(message, selected_constant):
     while True:
         result = input_constraints(message, selected_constant)
         if not result:
-            print("<!> Vamos tentar de novo!")
+            print("<!> Vamos tentar de novo!\n")
             continue
         break
     return result
 
 def value_constraint(messages, errors, name, results, constraints, mark):
-    print("\n<!> Vamos à restrição de %s."%name)
+    print("<!> Vamos à restrição de %s.\n"%name)
     string_constraints = []
 
     while True:
-        selected_constants = input("\n"+messages[0])
+        print(messages[0])
+        selected_constants = input(messages[2])
+        print()
         should_restart = False
         if len(selected_constants) != 0:
             selected_constants = selected_constants.split(",")
             for i in range(0, len(selected_constants)):
                 selected_constants[i] = selected_constants[i].strip()
                 if selected_constants[i] not in results[2]:
-                    print("\n"+errors[0] + selected_constants[i] + "!")
+                    print(errors[0] + selected_constants[i] + "!")
                     should_restart = True
                     break
 
