@@ -113,3 +113,25 @@ def value_constraint(messages, errors, name, results, constraints, mark):
             if should_restart:
                 continue
         break
+
+def new_investiments_problem(string_answers, results, operator):
+    invConstraint = string_answers[1][:].split("= ")
+    invConstraint[0] = invConstraint[0][:-1]
+    if operator == "d":
+        invConstraint[1] = float(invConstraint[1])*2
+    elif operator == "h":
+        invConstraint[1] = float(invConstraint[1])/2
+    invConstraint[0] = invConstraint[0].split("+")
+    for i in range(len(invConstraint[0])):
+        invConstraint[0][i] = float(invConstraint[0][i].replace("x%d"%(i+1),"").strip())
+
+    newInvConstraint = invConstraint[0][0] * results[1][0] 
+    for i in range(1,len(invConstraint[0])):
+        newInvConstraint += invConstraint[0][i] * results[1][i]
+    return (newInvConstraint <= invConstraint[1], invConstraint[1])
+
+def write_result(variables, str_constraints):
+    newStr_constraints = str_constraints[0].split("+")
+    for i in range(len(variables)):
+        newStr_constraints[i] = newStr_constraints[i].replace("x%d"%(i+1)," * "+str(variables[i]))
+    return "+".join(newStr_constraints)

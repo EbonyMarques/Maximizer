@@ -1,6 +1,5 @@
 import cvxpy as cp
 from domain.problem import Problem
-from domain.structure import *
 from domain.main import *
 
 #Results Guide
@@ -63,15 +62,37 @@ for i in range(1,len(results[0])):
 
 #Construção e resolução do problema de maximização, utilizando a biblioteca solver
 problema = cp.Problem(cp.Maximize(objetivo), constraints)
-problema.solve()
+problema.solve(solver=cp.CPLEX)
 
 print("<!> Há", len(constraints), "restrições.\n")
-for i in constraints:
+for i in string_answers:
     print(i)
 print()
-print(string_answers)
 
-print(problema.value, list(map(lambda x: x.value,results[1])), problema.status)
+print("<*> Foi encontrada a seguinte solução com status '%s': %d = "%(problema.status,int(problema.value)), end="")
+newStr_constraints = write_result(list(map(lambda x: x.value,results[1])),string_answers)
+print(newStr_constraints+'\n')
+
+newInvConstraint = new_investiments_problem(string_answers, results, "d")
+constraints2 = constraints
+constraints2[0] = newInvConstraint[0]
+problema = cp.Problem(cp.Maximize(objetivo), constraints2)
+problema.solve(solver=cp.CPLEX)
+
+print("Também foram encontradas soluções para o dobro dos investimentos(%.1f) com status '%s': %d = "%(newInvConstraint[1], problema.status, int(problema.value)),end="")
+newStr_constraints = write_result(list(map(lambda x: x.value,results[1])),string_answers)
+print(newStr_constraints+'\n')
+
+newInvConstraint = new_investiments_problem(string_answers, results, "h")
+constraints3 = constraints
+constraints3[0] = newInvConstraint[0]
+problema = cp.Problem(cp.Maximize(objetivo), constraints3)
+problema.solve(solver=cp.CPLEX)
+
+print("E também para a metade(%.1f) dos investimentos com status '%s': %d = "%(newInvConstraint[1], problema.status,int(problema.value)),end="")
+newStr_constraints = write_result(list(map(lambda x: x.value,results[1])),string_answers)
+print(newStr_constraints+'\n')
+
 
 #(1*47)+(2*18)+(3*39)
 #(10*47)+(20*18)+(30*39)
