@@ -62,14 +62,15 @@ while True:
 
     #Construção e resolução do problema de maximização, utilizando a biblioteca solver
     problema = cp.Problem(cp.Maximize(objetivo), constraints)
-    problema.solve(solver=cp.CPLEX)
+    #problema.solve(solver=cp.CPLEX)
+    problema.solve()
 
     print("<!> Há", len(constraints), "restrições.\n")
     for i in string_answers:
         print(i)
     print()
 
-    print("<*> Foi encontrada a seguinte solução com status '%s': %d = "%(problema.status,int(problema.value)), end="")
+    print("<!> Esta é a solução ótima para o problema:\n<!> %d = "%(int(problema.value)), end="")
     newStr_constraints = write_result(list(map(lambda x: x.value,results[1])),string_answers)
     print(newStr_constraints+'\n')
 
@@ -77,9 +78,10 @@ while True:
     constraints2 = constraints
     constraints2[0] = newInvConstraint[0]
     problema = cp.Problem(cp.Maximize(objetivo), constraints2)
-    problema.solve(solver=cp.CPLEX)
+    #problema.solve(solver=cp.CPLEX)
+    problema.solve()
 
-    print("Também foram encontradas soluções para o dobro dos investimentos(%.1f) com status '%s': %d = "%(newInvConstraint[1], problema.status, int(problema.value)),end="")
+    print("<!> Também há solução ótima para um problema com o dobro do investimento (%.1f):\n<!> %d = "%(newInvConstraint[1], int(problema.value)),end="")
     newStr_constraints = write_result(list(map(lambda x: x.value,results[1])),string_answers)
     print(newStr_constraints+'\n')
 
@@ -87,15 +89,16 @@ while True:
     constraints3 = constraints
     constraints3[0] = newInvConstraint[0]
     problema = cp.Problem(cp.Maximize(objetivo), constraints3)
-    problema.solve(solver=cp.CPLEX)
+    #problema.solve(solver=cp.CPLEX)
+    problema.solve()
 
-    print("E também para a metade(%.1f) dos investimentos com status '%s': %d = "%(newInvConstraint[1], problema.status,int(problema.value)),end="")
+    print("<!> E também há solução ótima para um problema com a metade do investimento (%.1f):\n<!> %d = "%(newInvConstraint[1], int(problema.value)),end="")
     newStr_constraints = write_result(list(map(lambda x: x.value,results[1])),string_answers)
     print(newStr_constraints+'\n')
 
     valor = input("""
     Selecione a etapa que você deseja modificar:
-    1) função objetivo
+    1) Função objetivo
     2) Restrição de investimento
     3) Restrição de espaço
     4) Restrição de quantidade mínima
