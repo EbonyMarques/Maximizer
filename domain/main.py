@@ -241,8 +241,8 @@ def value_constraint(messages, errors, name, results, constraints, mark, string_
                 while True:
                     value = constraint_value(messages[1], i)
                     result = confirm_value_constraint(i,value, mark)
-                    string_constraints.append(result)
                     if (result):
+                        string_constraints.append(result)
                         if mark == ">=":
                             if string_answers:
                                 constraints[6:6] = [results[1][results[2].index(i)] >= value]
@@ -304,13 +304,13 @@ def calc_result(objetivo, constraints, string_answers, results):
     problema = cp.Problem(cp.Maximize(objetivo), constraints)
     #problema.solve(solver=cp.CPLEX)
     problema.solve()
-    #print(list(map(lambda x: x.value,results[1])), string_answers, constraints, objetivo, results)
 
     print("*-*"*15)
     print("\n<!> Função objetivo do problema: z = %s."%(string_answers[0]))
     print("<!> Restrições definidas:\n")
     count = 0
 
+    print(string_answers)
     for i in range(len(string_answers)):
         if i == 0:
             continue
@@ -328,11 +328,12 @@ def calc_result(objetivo, constraints, string_answers, results):
     print()
 
     try:
-        print("<!> Solução ótima para o problema definido:")
-        newStr_constraints = write_result(list(map(lambda x: x.value,results[1])),string_answers)
-        print("<!> Aplicando esses valores na função objetivo, temos:")
-        print("<!> %d = "%(int(problema.value)), end="")
-        print(newStr_constraints+'\n')
+        if (int(problema.value)):
+            print("<!> Solução ótima para o problema definido:")
+            newStr_constraints = write_result(list(map(lambda x: x.value,results[1])),string_answers)
+            print("<!> Aplicando esses valores na função objetivo, temos:")
+            print("<!> %d = "%(int(problema.value)), end="")
+            print(newStr_constraints+'\n')
     except:
         print("<!> Não há solução ótima para o problema definido!")
 
@@ -344,11 +345,12 @@ def calc_result(objetivo, constraints, string_answers, results):
         #problema.solve(solver=cp.CPLEX)
         problema.solve()
 
-        print("<!> Solução ótima para um problema com o dobro do investimento (%.1f):"%(newInvConstraint[1]))
-        newStr_constraints = write_result(list(map(lambda x: x.value,results[1])),string_answers)
-        print("<!> Aplicando esses valores na função objetivo, temos:")
-        print("<!> %d = "%(int(problema.value)),end="")
-        print(newStr_constraints+'\n')
+        if (int(problema.value)):
+            print("<!> Solução ótima para um problema com o dobro do investimento (%.1f):"%(newInvConstraint[1]))
+            newStr_constraints = write_result(list(map(lambda x: x.value,results[1])),string_answers)
+            print("<!> Aplicando esses valores na função objetivo, temos:")
+            print("<!> %d = "%(int(problema.value)),end="")
+            print(newStr_constraints+'\n')
     except:
         pass
 
@@ -360,10 +362,11 @@ def calc_result(objetivo, constraints, string_answers, results):
         #problema.solve(solver=cp.CPLEX)
         problema.solve()
 
-        print("<!> Solução ótima para um problema com a metade do investimento (%.1f):"%(newInvConstraint[1]))
-        newStr_constraints = write_result(list(map(lambda x: x.value,results[1])),string_answers)
-        print("<!> Aplicando esses valores na função objetivo, temos:")
-        print("<!> %d = "%(int(problema.value)),end="")
-        print(newStr_constraints+'\n')
+        if (int(problema.value)):
+            print("<!> Solução ótima para um problema com a metade do investimento (%.1f):"%(newInvConstraint[1]))
+            newStr_constraints = write_result(list(map(lambda x: x.value,results[1])),string_answers)
+            print("<!> Aplicando esses valores na função objetivo, temos:")
+            print("<!> %d = "%(int(problema.value)),end="")
+            print(newStr_constraints+'\n')
     except:
         pass

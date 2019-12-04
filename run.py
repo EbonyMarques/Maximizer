@@ -1,3 +1,7 @@
 from domain.structure import menu
 
-menu()
+try:
+    menu()
+except:
+    print("<::> Algo deu errado. Tente novamente.")
+    menu()

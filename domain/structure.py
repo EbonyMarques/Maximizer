@@ -100,7 +100,7 @@ def new_problem():
 def edit_problem(objetivo, string_answers, results, constraints):
     print(messages[9])
     action = input(messages[-1])
-    print()
+    print("\n")
 
     if action.lower() == "e":
         print("<?> O que você deseja fazer?:\n\n<1> Editar função objetivo...\n<2> Editar restrição de investimento...\n<3> Editar restrição de espaço...\n<4> Editar restrição(ões) de quantidade(s) mínima(s)...\n<5> Editar restrição(ões) de quantidade(s) máxima(s)...\n<6> Voltar ao menu...\n")
@@ -148,10 +148,9 @@ def edit_problem(objetivo, string_answers, results, constraints):
                 if len(string_answers) > 6 and (string_answers[6][0].find("<=")>=0 or (len(string_answers) > 7 and string_answers[7][0].find("<=")>=0)):
                     if string_answers[6][0].find("<=")>=0:
                         del string_answers[6]
-                        print("<!> Restrição(ões) de quantidade(s) máxima(s) antiga(s) removida(s)!")
                     else:
                         del string_answers[7]
-                        print("<!> Restrição(ões) de quantidade(s) máxima(s) antiga(s) removida(s)!")
+                    print("<!> Restrição(ões) de quantidade(s) máxima(s) antiga(s) removida(s)!")
                 if (constraint):
                     string_answers.append(constraint)
                 objetivo = write_objective(results)
