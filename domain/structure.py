@@ -35,7 +35,7 @@ def menu():
                 menu()
                 break
         elif result == 2:
-            print("\n<!> Obrigado por usar!")
+            print("\n<!> Obrigado por usar!\n")
             print("*-*"*15)
             break
         else:
@@ -100,10 +100,9 @@ def new_problem():
 def edit_problem(objetivo, string_answers, results, constraints):
     print(messages[9])
     action = input(messages[-1])
-    print("\n")
 
     if action.lower() == "e":
-        print("<?> O que você deseja fazer?:\n\n<1> Editar função objetivo...\n<2> Editar restrição de investimento...\n<3> Editar restrição de espaço...\n<4> Editar restrição(ões) de quantidade(s) mínima(s)...\n<5> Editar restrição(ões) de quantidade(s) máxima(s)...\n<6> Voltar ao menu...\n")
+        print("\n<?> O que você deseja fazer?:\n\n<1> Editar função objetivo...\n<2> Editar restrição de investimento...\n<3> Editar restrição de espaço...\n<4> Editar restrição(ões) de quantidade(s) mínima(s)...\n<5> Editar restrição(ões) de quantidade(s) máxima(s)...\n<6> Voltar ao menu...\n")
         while True:
             valor = input(messages[-1])
 
@@ -112,31 +111,31 @@ def edit_problem(objetivo, string_answers, results, constraints):
                 del string_answers[0]
                 string_answers[0:0] = [objective(messages, results)]
                 objetivo = write_objective(results)
+                print("<!> Função objetivo editada!\n")
                 calc_result(objetivo, constraints, string_answers, results)
-                print("<!> Função objetivo editada!")
                 return edit_problem(objetivo, string_answers, results, constraints)
                 break
             elif valor == "2":
                 del string_answers[1]
                 string_answers[1:1] = [basic_constraint(messages[1], names[0], results, constraints, "<=")]
                 objetivo = write_objective(results)
+                print("<!> Restrição de investimento editada!\n")
                 calc_result(objetivo, constraints, string_answers, results)
-                print("<!> Restrição de investimento editada!")
                 return edit_problem(objetivo, string_answers, results, constraints)
                 break
             elif valor == "3":
                 del string_answers[2]
                 string_answers[2:2] = [basic_constraint(messages[3], names[1], results, constraints, "<=")]
                 objetivo = write_objective(results)
+                print("<!> Restrição de espaço editada!\n")
                 calc_result(objetivo, constraints, string_answers, results)
-                print("<!> Restrição de espaço editada!")
                 return edit_problem(objetivo, string_answers, results, constraints)
                 break
             elif valor == "4":
                 constraint = value_constraint([messages[4], messages[6], messages[-1]], errors, names[2], results, constraints, ">=", string_answers)
                 if len(string_answers) > 6 and string_answers[6][0].find(">=")>=0:
                     del string_answers[6]
-                    print("<!> Restrição(ões) de quantidade(s) mínima(s) antiga(s) removida(s)!")
+                    print("<!> Restrição(ões) de quantidade(s) mínima(s) antiga(s) removida(s)!\n")
                 if (constraint):
                     string_answers[-1:-1] = [constraint]
                 objetivo = write_objective(results)
@@ -150,7 +149,7 @@ def edit_problem(objetivo, string_answers, results, constraints):
                         del string_answers[6]
                     else:
                         del string_answers[7]
-                    print("<!> Restrição(ões) de quantidade(s) máxima(s) antiga(s) removida(s)!")
+                    print("<!> Restrição(ões) de quantidade(s) máxima(s) antiga(s) removida(s)!\n")
                 if (constraint):
                     string_answers.append(constraint)
                 objetivo = write_objective(results)
@@ -158,6 +157,7 @@ def edit_problem(objetivo, string_answers, results, constraints):
                 return edit_problem(objetivo, string_answers, results, constraints)
                 break
             elif valor == "6":
+                print()
                 return 0
                 break
             else:

@@ -310,7 +310,7 @@ def calc_result(objetivo, constraints, string_answers, results):
     print("<!> Restrições definidas:\n")
     count = 0
 
-    print(string_answers)
+    #print(string_answers)
     for i in range(len(string_answers)):
         if i == 0:
             continue
