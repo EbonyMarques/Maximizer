@@ -36,16 +36,16 @@ def confirm_objective(constants):
     for i in range(1, len(constants)+1):
         if i == len(constants) and len(constants) == 1:
             print("x%i! "%(i))
-            products.append("x%i"%(i))
+            products.append("p%i"%(i))
         elif i == 1:
             print("x%i"%(i), end="")
-            products.append("x%i"%(i))
+            products.append("p%i"%(i))
         elif i == len(constants):
             print(" e x%i! "%(i))
-            products.append("x%i"%(i))
+            products.append("p%i"%(i))
         else:
             print(", x%i"%(i), end="")
-            products.append("x%i"%(i))
+            products.append("p%i"%(i))
 
     for i in range(1, len(constants)+1):
         if i == len(constants):
@@ -93,7 +93,7 @@ def confirm_constraint(constants, name, mark):
             return constraint
 
 def confirm_value_constraint(constant, value, mark):
-    constraint = "%s %s " %(constant, mark) + str(value)
+    constraint = "%s %s " %(constant.replace("p", "x"), mark) + str(value)
     if mark == "<=":
         #print("\n<?> Restrição de quantidade máxima gerada para 1 produto, %s."%(constant))
         print("\n<?> %s representa a restrição de quantidade máxima do produto %s? S/N?" %(constraint, constant))
@@ -153,7 +153,7 @@ def objective(messages, results):
     else:
         while True:
             if (len(constants) != len(results[0])):
-                print("<!> Este problema foi definido inicialmente com "+str(len(results[0]))+" produto(s), por favor selecione o lucro correspondente a esse(s) produto(s).")
+                print("<!> Este problema foi inicialmente definido com "+str(len(results[0]))+" produto(s). Por favor, entre com o(s) lucro(s) correspondente(s) a esse(s) produto(s).")
                 constants = objective_costs(messages)
                 continue
             result = confirm_objective(constants)
@@ -164,7 +164,6 @@ def objective(messages, results):
                 results[0][i].value = result[0][i]
             break
         return result[2]
-
 
 def constraint_costs(message, defined_constants):
     while True:
@@ -289,20 +288,28 @@ def write_objective(results):
 
 def write_result(variables, str_constraints):
     newStr_constraints = str_constraints[0].split("+")
+    print("<!> ", end="")
     for i in range(len(variables)):
+        if i == len(variables)-1:
+            print(" e x%d = %s."%(i+1,str(variables[i])), end="")
+        elif i == len(variables)-2:
+            print("x%d = %s"%(i+1,str(variables[i])), end="")
+        else:
+            print("x%d = %s, "%(i+1,str(variables[i])), end="")
         newStr_constraints[i] = newStr_constraints[i].replace("x%d"%(i+1)," * "+str(variables[i]))
+    print()
     return "+".join(newStr_constraints)
 
 def calc_result(objetivo, constraints, string_answers, results):
     problema = cp.Problem(cp.Maximize(objetivo), constraints)
     #problema.solve(solver=cp.CPLEX)
     problema.solve()
-    print(list(map(lambda x: x.value,results[1])), string_answers, constraints, objetivo, results)
+    #print(list(map(lambda x: x.value,results[1])), string_answers, constraints, objetivo, results)
 
     print("*-*"*15)
-    print("Função objetivo do problema: z = %s."%(string_answers[0]))
-
-    print("\n<!> Há", len(constraints), "restrições.\n")
+    print("\n<!> Função objetivo do problema: z = %s."%(string_answers[0]))
+    print("<!> Restrições definidas:\n")
+    count = 0
 
     for i in range(len(string_answers)):
         if i == 0:
@@ -310,18 +317,24 @@ def calc_result(objetivo, constraints, string_answers, results):
         else:
             if (type(string_answers[i]) == list):
                 for x in string_answers[i]:
-                    print(x)
+                    print(x.replace("p","x"))
+                    count += 1
             else:
-                print(string_answers[i])
+                print(string_answers[i].replace("p","x"))
+                count += 1
+
+    print("\n<!> Há", count, "restrições.")
 
     print()
 
     try:
-        print("<!> Esta é a solução ótima para o problema originalmente definido:\n<!> %d = "%(int(problema.value)), end="")
+        print("<!> Solução ótima para o problema definido:")
         newStr_constraints = write_result(list(map(lambda x: x.value,results[1])),string_answers)
+        print("<!> Aplicando esses valores na função objetivo, temos:")
+        print("<!> %d = "%(int(problema.value)), end="")
         print(newStr_constraints+'\n')
     except:
-        print("<!> Não há solução ótima para o problema originalmente definido!")
+        print("<!> Não há solução ótima para o problema definido!")
 
     try:
         newInvConstraint = new_investiments_problem(string_answers, results, "d")#double
@@ -331,8 +344,10 @@ def calc_result(objetivo, constraints, string_answers, results):
         #problema.solve(solver=cp.CPLEX)
         problema.solve()
 
-        print("<!> Há solução ótima para um problema com o dobro do investimento (%.1f):\n<!> %d = "%(newInvConstraint[1], int(problema.value)),end="")
+        print("<!> Solução ótima para um problema com o dobro do investimento (%.1f):"%(newInvConstraint[1]))
         newStr_constraints = write_result(list(map(lambda x: x.value,results[1])),string_answers)
+        print("<!> Aplicando esses valores na função objetivo, temos:")
+        print("<!> %d = "%(int(problema.value)),end="")
         print(newStr_constraints+'\n')
     except:
         pass
@@ -345,8 +360,10 @@ def calc_result(objetivo, constraints, string_answers, results):
         #problema.solve(solver=cp.CPLEX)
         problema.solve()
 
-        print("<!> Também há solução ótima para um problema com a metade do investimento (%.1f):\n<!> %d = "%(newInvConstraint[1], int(problema.value)),end="")
+        print("<!> Solução ótima para um problema com a metade do investimento (%.1f):"%(newInvConstraint[1]))
         newStr_constraints = write_result(list(map(lambda x: x.value,results[1])),string_answers)
+        print("<!> Aplicando esses valores na função objetivo, temos:")
+        print("<!> %d = "%(int(problema.value)),end="")
         print(newStr_constraints+'\n')
     except:
         pass
