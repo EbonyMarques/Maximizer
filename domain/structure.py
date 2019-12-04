@@ -15,7 +15,7 @@ messages = ["<!> Comecemos setando a função objetivo.",
             ">>> Entre com a quantidade mínima do produto ",
             ">>> Entre com a quantidade máxima do produto ",
             ">>> Para cada produto considerado, entre com seu lucro: ",
-            "<?> Entre com 'e' para editar o problema originalmente definido ou com qualquer outra tecla para voltar ao menu...",
+            "<?> Entre com 'e' para editar o problema originalmente definido ou pressione enter para voltar ao menu...",
             ">>> "]
 errors = ["<!> Este produto não existe: "]
 
@@ -30,6 +30,7 @@ def menu():
         elif result == 1:
             print("\n" + "*-*"*15 + "\n")
             action = new_problem()
+            print(action)
             if action == 0:
                 menu()
                 break
@@ -89,80 +90,72 @@ def new_problem():
         string_answers.append(constraint)
 
     #Construção da função Objetivo c1*x1+c2*x2+...+cn*xn
-    objetivo = results[0][0]*results[1][0]
-    for i in range(1,len(results[0])):
-        objetivo += results[0][i]*results[1][i]
+    objetivo = write_objective(results)
 
     #Construção e resolução do problema de maximização, utilizando a biblioteca solver
-    problema = cp.Problem(cp.Maximize(objetivo), constraints)
-    #problema.solve(solver=cp.CPLEX)
-    problema.solve()
+    calc_result(objetivo, constraints, string_answers, results)
 
-    print("*-*"*15)
-    print("Função objetivo do problema: z = %s."%(string_answers[0]))
+    return edit_problem(objetivo, string_answers, results, constraints)
 
-    print("\n<!> Há", len(constraints), "restrições.\n")
-
-    for i in range(len(string_answers)):
-        if i == 0:
-            continue
-        else:
-            print(string_answers[i])
-
-    print()
-
-    try:
-        print("<!> Esta é a solução ótima para o problema originalmente definido:\n<!> %d = "%(int(problema.value)), end="")
-        newStr_constraints = write_result(list(map(lambda x: x.value,results[1])),string_answers)
-        print(newStr_constraints+'\n')
-    except:
-        print("<!> Não há solução ótima para o problema originalmente definido!")
-
-    try:
-        newInvConstraint = new_investiments_problem(string_answers, results, "d")
-        constraints2 = constraints
-        constraints2[0] = newInvConstraint[0]
-        problema = cp.Problem(cp.Maximize(objetivo), constraints2)
-        #problema.solve(solver=cp.CPLEX)
-        problema.solve()
-
-        print("<!> Há solução ótima para um problema com o dobro do investimento (%.1f):\n<!> %d = "%(newInvConstraint[1], int(problema.value)),end="")
-        newStr_constraints = write_result(list(map(lambda x: x.value,results[1])),string_answers)
-        print(newStr_constraints+'\n')
-    except:
-        pass
-
-    try:
-        newInvConstraint = new_investiments_problem(string_answers, results, "h")
-        constraints3 = constraints
-        constraints3[0] = newInvConstraint[0]
-        problema = cp.Problem(cp.Maximize(objetivo), constraints3)
-        #problema.solve(solver=cp.CPLEX)
-        problema.solve()
-
-        print("<!> Também há solução ótima para um problema com a metade do investimento (%.1f):\n<!> %d = "%(newInvConstraint[1], int(problema.value)),end="")
-        newStr_constraints = write_result(list(map(lambda x: x.value,results[1])),string_answers)
-        print(newStr_constraints+'\n')
-    except:
-        pass
-
+def edit_problem(objetivo, string_answers, results, constraints):
     print(messages[9])
     action = input(messages[-1])
     print()
 
     if action.lower() == "e":
         print("<?> O que você deseja fazer?:\n\n<1> Editar função objetivo...\n<2> Editar restrição de Investimento...\n<3> Editar restrição de Espaço...\n<4> Editar restrição de Quantidade mínima...\n<5> Editar restrição de Quantidade máxima...\n<6> Voltar ao menu...\n\n")
-        valor = input(messages[-1])
+        while True:
+            valor = input(messages[-1])
+
+            print(string_answers, results)
+            if valor == "1":
+                del string_answers[0]
+                string_answers[0:0] = [objective(messages, results)]
+                objetivo = write_objective(results)
+                calc_result(objetivo, constraints, string_answers, results)
+                return edit_problem(objetivo, string_answers, results, constraints)
+                break
+            elif valor == "2":
+                del string_answers[1]
+                string_answers[1:1] = [basic_constraint(messages[1], names[0], results, constraints, "<=")]
+                objetivo = write_objective(results)
+                calc_result(objetivo, constraints, string_answers, results)
+                return edit_problem(objetivo, string_answers, results, constraints)
+                break
+            elif valor == "3":
+                del string_answers[2]
+                string_answers[2:2] = [basic_constraint(messages[3], names[1], results, constraints, "<=")]
+                objetivo = write_objective(results)
+                calc_result(objetivo, constraints, string_answers, results)
+                return edit_problem(objetivo, string_answers, results, constraints)
+                break
+            elif valor == "4":
+                constraint = value_constraint([messages[4], messages[6], messages[-1]], errors, names[2], results, constraints, ">=", string_answers)
+                if len(string_answers) > 6 and string_answers[6][0].find(">=")>=0:
+                    del string_answers[6]
+                if (constraint):
+                    string_answers[-1:-1] = [constraint]
+                objetivo = write_objective(results)
+                calc_result(objetivo, constraints, string_answers, results)
+                return edit_problem(objetivo, string_answers, results, constraints)
+                break
+            elif valor == "5":
+                constraint = value_constraint([messages[5], messages[7], messages[-1]], errors, names[3], results, constraints, "<=", string_answers)
+                if len(string_answers) > 6 and (string_answers[6][0].find("<=")>=0 or (len(string_answers) > 7 and string_answers[7][0].find("<=")>=0)):
+                    if string_answers[6][0].find("<=")>=0:
+                        del string_answers[6]
+                    else:
+                        del string_answers[7]
+                if (constraint):
+                    string_answers.append(constraint)
+                objetivo = write_objective(results)
+                calc_result(objetivo, constraints, string_answers, results)
+                return edit_problem(objetivo, string_answers, results, constraints)
+                break
+            elif valor == "6":
+                return 0
+                break
+            else:
+                print("<!> Opção inválida!")
     else:
         return 0
-
-    # if valor === 1:
-    # elif valor === 2:
-    # elif valor === 3:
-    # elif valor === 4:
-    # elif valor === 5:
-    # elif valor === 6:
-    #     continue
-    # elif valor === 7:
-    #     print("Até logo.")
-    #     break

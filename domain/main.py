@@ -135,20 +135,36 @@ def objective_costs(messages):
 def objective(messages, results):
     print(messages[0],"\n")
     constants = objective_costs(messages)
-    while True:
-        result = confirm_objective(constants)
-        if result == 0:
-            constants = objective_costs(messages)
-            continue
-        variables, constants = list(), list()
-        for i in result[0]:
-            constant = cp.Parameter()
-            constant.value = i
-            constants.append(constant)
-            variables.append(cp.Variable(integer=True))
-        results.extend([constants, variables, result[1]])
-        break
-    return result[2]
+    if len(results) == 0:
+        while True:
+            result = confirm_objective(constants)
+            if result == 0:
+                constants = objective_costs(messages)
+                continue
+            variables, constants = list(), list()
+            for i in result[0]:
+                constant = cp.Parameter()
+                constant.value = i
+                constants.append(constant)
+                variables.append(cp.Variable(integer=True))
+            results.extend([constants, variables, result[1]])
+            break
+        return result[2]
+    else:
+        while True:
+            if (len(constants) != len(results[0])):
+                print("<!> Este problema foi definido inicialmente com "+str(len(results[0]))+" produto(s), por favor selecione o lucro correspondente a esse(s) produto(s).")
+                constants = objective_costs(messages)
+                continue
+            result = confirm_objective(constants)
+            if result == 0:
+                constants = objective_costs(messages)
+                continue
+            for i in range(len(result[0])):
+                results[0][i].value = result[0][i]
+            break
+        return result[2]
+
 
 def constraint_costs(message, defined_constants):
     while True:
@@ -192,9 +208,19 @@ def constraint_value(message, selected_constant):
         break
     return result
 
-def value_constraint(messages, errors, name, results, constraints, mark):
+def value_constraint(messages, errors, name, results, constraints, mark, string_answers=None):
     print("<!> Vamos à restrição de %s.\n"%name)
     string_constraints = []
+
+    if string_answers:
+        if mark == ">=" and len(string_answers) > 6 and string_answers[6][0].find(">=")>=0:
+            del constraints[6:6+len(string_answers[6])]
+            print(constraints)
+        elif mark == "<=" and len(string_answers) > 6 and (string_answers[6][0].find("<=")>=0 or (len(string_answers) > 7 and string_answers[7][0].find("<=")>=0)):
+            if string_answers[6][0].find("<=")>=0:
+                del constraints[5:]
+            else:
+                del constraints[5+len(string_answers[6]):]
 
     while True:
         selected_constants = input(messages[0])
@@ -219,7 +245,10 @@ def value_constraint(messages, errors, name, results, constraints, mark):
                     string_constraints.append(result)
                     if (result):
                         if mark == ">=":
-                            constraints.append(results[1][results[2].index(i)] >= value)
+                            if string_answers:
+                                constraints[6:6] = [results[1][results[2].index(i)] >= value]
+                            else:
+                                constraints.append(results[1][results[2].index(i)] >= value)
                             break
                         elif mark == "<=":
                             constraints.append(results[1][results[2].index(i)] <= value)
@@ -233,6 +262,7 @@ def value_constraint(messages, errors, name, results, constraints, mark):
             should_restart = confirm_skip()
             if should_restart:
                 continue
+            return []
         break
 
 def new_investiments_problem(string_answers, results, operator):
@@ -251,8 +281,72 @@ def new_investiments_problem(string_answers, results, operator):
         newInvConstraint += invConstraint[0][i] * results[1][i]
     return (newInvConstraint <= invConstraint[1], invConstraint[1])
 
+def write_objective(results):
+    objetivo = results[0][0]*results[1][0]
+    for i in range(1,len(results[0])):
+        objetivo += results[0][i]*results[1][i]
+    return objetivo
+
 def write_result(variables, str_constraints):
     newStr_constraints = str_constraints[0].split("+")
     for i in range(len(variables)):
         newStr_constraints[i] = newStr_constraints[i].replace("x%d"%(i+1)," * "+str(variables[i]))
     return "+".join(newStr_constraints)
+
+def calc_result(objetivo, constraints, string_answers, results):
+    problema = cp.Problem(cp.Maximize(objetivo), constraints)
+    #problema.solve(solver=cp.CPLEX)
+    problema.solve()
+    print(list(map(lambda x: x.value,results[1])), string_answers, constraints, objetivo, results)
+
+    print("*-*"*15)
+    print("Função objetivo do problema: z = %s."%(string_answers[0]))
+
+    print("\n<!> Há", len(constraints), "restrições.\n")
+
+    for i in range(len(string_answers)):
+        if i == 0:
+            continue
+        else:
+            if (type(string_answers[i]) == list):
+                for x in string_answers[i]:
+                    print(x)
+            else:
+                print(string_answers[i])
+
+    print()
+
+    try:
+        print("<!> Esta é a solução ótima para o problema originalmente definido:\n<!> %d = "%(int(problema.value)), end="")
+        newStr_constraints = write_result(list(map(lambda x: x.value,results[1])),string_answers)
+        print(newStr_constraints+'\n')
+    except:
+        print("<!> Não há solução ótima para o problema originalmente definido!")
+
+    try:
+        newInvConstraint = new_investiments_problem(string_answers, results, "d")#double
+        constraints2 = constraints.copy()
+        constraints2[0] = newInvConstraint[0]
+        problema = cp.Problem(cp.Maximize(objetivo), constraints2)
+        #problema.solve(solver=cp.CPLEX)
+        problema.solve()
+
+        print("<!> Há solução ótima para um problema com o dobro do investimento (%.1f):\n<!> %d = "%(newInvConstraint[1], int(problema.value)),end="")
+        newStr_constraints = write_result(list(map(lambda x: x.value,results[1])),string_answers)
+        print(newStr_constraints+'\n')
+    except:
+        pass
+
+    try:
+        newInvConstraint = new_investiments_problem(string_answers, results, "h")#half
+        constraints3 = constraints.copy()
+        constraints3[0] = newInvConstraint[0]
+        problema = cp.Problem(cp.Maximize(objetivo), constraints3)
+        #problema.solve(solver=cp.CPLEX)
+        problema.solve()
+
+        print("<!> Também há solução ótima para um problema com a metade do investimento (%.1f):\n<!> %d = "%(newInvConstraint[1], int(problema.value)),end="")
+        newStr_constraints = write_result(list(map(lambda x: x.value,results[1])),string_answers)
+        print(newStr_constraints+'\n')
+    except:
+        pass
